@@ -2,19 +2,15 @@
 
 def __COMINT_MIME_setup(types):
     try:
-        import IPython, matplotlib
-        ipython = IPython.get_ipython()
-        matplotlib.use('module://ipykernel.pylab.backend_inline')
+        ipython = get_ipython()
+        assert ipython
     except:
-        print("`comint-mime': error setting up")
+        print("`comint-mime' error: IPython is required")
         return
 
     from base64 import encodebytes
-    from json import dumps as to_json
     from functools import partial
-
-    OSC = '\033]5151;'
-    ST = '\033\\'
+    from json import dumps as to_json
 
     MIME_TYPES = {
         "image/png": None,
@@ -23,7 +19,7 @@ def __COMINT_MIME_setup(types):
         "text/html": str.encode,
         "application/json": lambda d: to_json(d).encode(),
     }
-    
+
     if types == "all":
         types = MIME_TYPES
     else:
@@ -35,8 +31,9 @@ def __COMINT_MIME_setup(types):
             data = encoder(data)
         header = to_json({**meta, "type": type})
         payload = encodebytes(data).decode()
-        print(f'{OSC}{header}\n{payload}{ST}')
+        print(f"\033]5151;{header}\n{payload}\033\\")
 
+    ipython.enable_matplotlib("inline")
     ipython.display_formatter.active_types = list(MIME_TYPES.keys())
     for mime, encoder in MIME_TYPES.items():
         ipython.display_formatter.formatters[mime].enabled = mime in types
