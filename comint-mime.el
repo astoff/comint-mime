@@ -61,7 +61,8 @@ ignores this option altogether.")
   '(("^image/svg+xml\\>" . comint-mime-render-svg)
     ("^image\\>" . comint-mime-render-image)
     ("^text/html" . comint-mime-render-html)
-    ("^text/latex" . comint-mime-render-latex)
+    ;; Disable this by default until we are sure about the security implications
+    ;; ("^text/latex" . comint-mime-render-latex)
     ("^text\\>" . comint-mime-render-plain-text)
     ("." . comint-mime-render-literally))
   "Alist associating MIME types to rendering functions.
