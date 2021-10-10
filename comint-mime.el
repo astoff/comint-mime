@@ -144,18 +144,21 @@ from `comint-mode', or interactively after starting the comint."
 (defun comint-mime-render-html (header data)
   "Render HTML from HEADER and DATA provided by `comint-mime-osc-handler'."
   (insert
-   (with-temp-buffer
-     (insert data)
-     (decode-coding-region (point-min) (point-max) 'utf-8)
-     (shr-render-region (point-min) (point-max))
-     ;; Don't let font-lock override those faces
-     (goto-char (point-min))
-     (let (match)
-       (while (setq match (text-property-search-forward 'face))
-         (put-text-property (prop-match-beginning match) (prop-match-end match)
-                            'font-lock-face (prop-match-value match))))
-     (put-text-property (point-min) (point-max) 'comint-mime header)
-     (buffer-string))))
+   ;; FIXME: This `save-excursion' is needed since the patch fixing
+   ;; bug#51009.  Is this reliable or are there better solutions?
+   (save-excursion
+     (with-temp-buffer
+       (insert data)
+       (decode-coding-region (point-min) (point-max) 'utf-8)
+       (shr-render-region (point-min) (point-max))
+       ;; Don't let font-lock override those faces
+       (goto-char (point-min))
+       (let (match)
+         (while (setq match (text-property-search-forward 'face))
+           (put-text-property (prop-match-beginning match) (prop-match-end match)
+                              'font-lock-face (prop-match-value match))))
+       (put-text-property (point-min) (point-max) 'comint-mime header)
+       (buffer-string)))))
 
 ;;;; LaTeX
 (autoload 'org-format-latex "org")
