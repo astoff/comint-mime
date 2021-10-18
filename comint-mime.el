@@ -1,12 +1,12 @@
 ;;; comint-mime.el --- Display content of various MIME types in comint buffers  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021  Augusto Stoffel
+;; Copyright (C) 2021  Free Software Foundation, Inc.
 
 ;; Author: Augusto Stoffel <arstoffel@gmail.com>
-;; Keywords: processes, multimedia
-;; Version: 0
 ;; Homepage: https://github.com/astoff/comint-mime
-;; Package-Requires: ((emacs "28"))
+;; Keywords: processes, multimedia
+;; Package-Requires: ((emacs "28.0.60"))
+;; Version: 0
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
