@@ -12,9 +12,15 @@ def __COMINT_MIME_setup(types):
     from functools import partial
     from json import dumps as to_json
 
+    def encoding_workaround(data):
+        if isinstance(data, str):
+            from base64 import decodebytes
+            return decodebytes(data.encode())
+        return data
+
     MIME_TYPES = {
-        "image/png": None,
-        "image/jpeg": None,
+        "image/png": encoding_workaround,
+        "image/jpeg": encoding_workaround,
         "text/latex": str.encode,
         "text/html": str.encode,
         "application/json": lambda d: to_json(d).encode(),
