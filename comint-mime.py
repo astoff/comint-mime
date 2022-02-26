@@ -18,6 +18,8 @@ def __COMINT_MIME_setup(types):
             return decodebytes(data.encode())
         return data
 
+    SIZE_LIMIT = 4000
+
     MIME_TYPES = {
         "image/png": encoding_workaround,
         "image/jpeg": encoding_workaround,
@@ -36,7 +38,13 @@ def __COMINT_MIME_setup(types):
         if encoder:
             data = encoder(data)
         header = to_json({**meta, "type": type})
-        payload = encodebytes(data).decode()
+        if len(data) > SIZE_LIMIT:
+            from tempfile import mkstemp
+            fdesc, fname = mkstemp()
+            with open(fdesc, "wb") as f: f.write(data)
+            payload = "tmpfile://" + fname
+        else:
+            payload = encodebytes(data).decode()
         print(f"\033]5151;{header}\n{payload}\033\\")
 
     ipython.enable_matplotlib("inline")
