@@ -8,7 +8,7 @@ in Emacs parlance) to display graphics and other types of special
 content.
 
 #+caption: comint-mime in Python
-[[https://user-images.githubusercontent.com/6500902/133823411-ca75122d-4a39-4e3c-ac55-b2a1f974ff5e.png]]
+[[https://raw.githubusercontent.com/astoff/comint-mime/images/python-shell.png]]
 
 The main motivation behind this package is to display plots in the
 Python shell. However, it does more that that.
@@ -30,7 +30,7 @@ is provided to display content. Again, this works for images, HTML,
 LaTeX snippets, etc.
 
 #+caption: comint-mime in Bash
-[[https://user-images.githubusercontent.com/6500902/133823494-696ee5a7-f0b0-47a3-9ccb-29ab9f36c3a9.png]]
+[[https://raw.githubusercontent.com/astoff/comint-mime/images/shell.png]]
 
 ** Usage
 
