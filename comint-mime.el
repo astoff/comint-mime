@@ -5,8 +5,8 @@
 ;; Author: Augusto Stoffel <arstoffel@gmail.com>
 ;; Homepage: https://github.com/astoff/comint-mime
 ;; Keywords: processes, multimedia
-;; Package-Requires: ((emacs "28.0.60"))
-;; Version: 0
+;; Package-Requires: ((emacs "28.1"))
+;; Version: 0.1
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

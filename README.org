@@ -1,7 +1,6 @@
 #+title: comint-mime.el
-#+author: Augusto Stoffel
 
-#+html: <a href="http://elpa.gnu.org/devel/comint-mime.html"><img alt="GNU-devel ELPA" src="https://elpa.gnu.org/devel/comint-mime.svg"/></a>
+#+html: <p align="center"><a href="http://elpa.gnu.org/packages/comint-mime.html"><img alt="GNU-devel ELPA" src="https://elpa.gnu.org/packages/comint-mime.svg"/></a></p>
 
 This Emacs package provides a mechanism for REPLs (or comint buffers,
 in Emacs parlance) to display graphics and other types of special
@@ -85,6 +84,12 @@ using a temporary file for large data transfers.
 
 ** Todos
 
-- [ ] It should be possible to support at least Matplotlib in the
-  standard Python interpreter.
-- [ ] Improve the HTML rendering for numeric tables
+- It should be possible to support at least Matplotlib in the standard
+  Python interpreter.
+- Improve the HTML rendering for numeric tables
+
+** Contributing
+
+Discussions, suggestions and code contributions are welcome! Since
+this package is part of GNU ELPA, contributions require a copyright
+assignment to the FSF.
