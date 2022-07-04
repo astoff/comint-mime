@@ -1,6 +1,6 @@
 #+title: comint-mime.el
 
-#+html: <p align="center"><a href="http://elpa.gnu.org/packages/comint-mime.html"><img alt="GNU-devel ELPA" src="https://elpa.gnu.org/packages/comint-mime.svg"/></a></p>
+#+html: <p align="center"><a href="http://elpa.gnu.org/packages/comint-mime.html"><img alt="GNU ELPA" src="https://elpa.gnu.org/packages/comint-mime.svg"/></a></p>
 
 This Emacs package provides a mechanism for REPLs (or comint buffers,
 in Emacs parlance) to display graphics and other types of special
