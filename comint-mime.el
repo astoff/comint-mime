@@ -44,8 +44,10 @@
 
 ;;; Code:
 
+(require 'comint)
 (require 'json)
 (require 'svg)
+(require 'text-property-search)
 (require 'url-parse)
 
 (defvar comint-mime-enabled-types 'all
