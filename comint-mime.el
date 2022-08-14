@@ -49,6 +49,7 @@
 (require 'svg)
 (require 'text-property-search)
 (require 'url-parse)
+(eval-when-compile (require 'subr-x))
 
 (defvar comint-mime-enabled-types 'all
   "MIME types which the inferior process may send to Emacs.
@@ -97,8 +98,11 @@ This function is intended to be used as an entry of
          (data (if (string-match "\\(tmp\\)?file:" payload)
                    (let* ((tmp (match-beginning 1))
                           (url (url-generic-parse-url payload))
-                          (file (concat (file-remote-p default-directory)
-                                        (url-filename url))))
+                          (remote (file-remote-p default-directory))
+                          (file (cond (remote (concat remote (url-filename url)))
+                                      ((eq system-type 'windows-nt)
+                                       (string-remove-prefix "/" (url-filename url)))
+                                      (t (url-filename url)))))
                      (with-temp-buffer
                        (set-buffer-multibyte nil)
                        (insert-file-contents-literally file)
