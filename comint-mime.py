@@ -11,6 +11,7 @@ def __COMINT_MIME_setup(types):
     from base64 import encodebytes
     from functools import partial
     from json import dumps as to_json
+    from pathlib import Path
 
     def encoding_workaround(data):
         if isinstance(data, str):
@@ -42,7 +43,7 @@ def __COMINT_MIME_setup(types):
             from tempfile import mkstemp
             fdesc, fname = mkstemp()
             with open(fdesc, "wb") as f: f.write(data)
-            payload = "tmpfile://" + fname
+            payload = "tmp" + Path(fname).as_uri()
         else:
             payload = encodebytes(data).decode()
         print(f"\033]5151;{header}\n{payload}\033\\")
