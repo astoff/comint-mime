@@ -1,115 +1,60 @@
-# This file is part of https://github.com/astoff/comint-mime
+# This file is part of https://github.com/astoff/comint-mime  -*- tab-width: 4; -*-
+def __COMINT_MIME_setup(types, size_limit=4000):
+	import base64, functools, json, pathlib
 
-def __COMINT_MIME_setup(types):
-    ipython = False
-    try:
-        ipython = get_ipython()
-        assert ipython
-    except:
-        import importlib.util
-        if not importlib.util.find_spec("matplotlib"):
-            print("`comint-mime' error: IPython or Matplotlib is required")
-            return
+	def encoding_workaround(data):
+		return base64.decodebytes(data.encode()) if isinstance(data, str) else data
 
-    from base64 import encodebytes
-    from functools import partial
-    from json import dumps as to_json
-    from pathlib import Path
+	def print_osc(type, encoder, data, meta=None):
+		if encoder: data = encoder(data)
+		header = json.dumps({**(meta or {}), "type": type})
+		if len(data) > size_limit:
+			from tempfile import mkstemp
+			fdesc, fname = mkstemp()
+			with open(fdesc, "wb") as f: f.write(data)
+			payload = "tmp" + pathlib.Path(fname).as_uri()
+		else:
+			payload = base64.encodebytes(data).decode()
+		print(f"\033]5151;{header}\n{payload}\033\\")
 
-    def encoding_workaround(data):
-        if isinstance(data, str):
-            from base64 import decodebytes
-            return decodebytes(data.encode())
-        return data
+	try:
+		ipython = get_ipython(); assert ipython
+		MIME_TYPES = {
+			"image/png": encoding_workaround,
+			"image/jpeg": encoding_workaround,
+			"text/latex": str.encode,
+			"text/html": str.encode,
+			"application/json": lambda d: json.dumps(d).encode(),
+		}
+		enabled = MIME_TYPES if types == "all" else types.split(";")
+		ipython.enable_matplotlib("inline")
+		ipython.display_formatter.active_types = list(MIME_TYPES.keys())
+		for mime, encoder in MIME_TYPES.items():
+			ipython.display_formatter.formatters[mime].enabled = mime in enabled
+			ipython.mime_renderers[mime] = functools.partial(print_osc, mime, encoder)
+		print("`comint-mime' enabled for", list(t for t in enabled if t in MIME_TYPES))
+	except:
+		try:
+			import importlib, io, sys, matplotlib
+			from matplotlib.backend_bases import FigureManagerBase
+			from matplotlib.backends.backend_agg import FigureCanvasAgg
+		except:
+			print("`comint-mime' error: IPython or Matplotlib required")
+			return
 
-    SIZE_LIMIT = 4000
+		class FC(FigureCanvasAgg):
+			manager_class = matplotlib._api.classproperty(lambda cls: FM)
 
-    def print_osc(type, encoder, data, meta):
-        meta = meta or {}
-        if encoder:
-            data = encoder(data)
-        header = to_json({**meta, "type": type})
-        if len(data) > SIZE_LIMIT:
-            from tempfile import mkstemp
-            fdesc, fname = mkstemp()
-            with open(fdesc, "wb") as f: f.write(data)
-            payload = "tmp" + Path(fname).as_uri()
-        else:
-            payload = encodebytes(data).decode()
-        print(f"\033]5151;{header}\n{payload}\033\\")
+		class FM(FigureManagerBase):
+			def show(self):
+				self.canvas.figure.draw_without_rendering()
+				buf = io.BytesIO()
+				self.canvas.print_png(buf)
+				print_osc("image/png", None, buf.getvalue())
 
-    if ipython:
-        MIME_TYPES = {
-            "image/png": encoding_workaround,
-            "image/jpeg": encoding_workaround,
-            "text/latex": str.encode,
-            "text/html": str.encode,
-            "application/json": lambda d: to_json(d).encode(),
-        }
-
-        if types == "all":
-            types = MIME_TYPES
-        else:
-            types = types.split(";")
-
-        ipython.enable_matplotlib("inline")
-        ipython.display_formatter.active_types = list(MIME_TYPES.keys())
-        for mime, encoder in MIME_TYPES.items():
-            ipython.display_formatter.formatters[mime].enabled = mime in types
-            ipython.mime_renderers[mime] = partial(print_osc, mime, encoder)
-
-        if types:
-            print("`comint-mime' enabled for",
-                  ", ".join(t for t in types if t in MIME_TYPES.keys()))
-        else:
-            print("`comint-mime' disabled")
-    else:
-        from importlib.abc import Loader, MetaPathFinder
-        from importlib.machinery import ModuleSpec
-        from sys import meta_path
-        from os import environ
-
-        environ["MPLBACKEND"] = "module://emacscomintmime"
-
-        from matplotlib import _api
-        from matplotlib.backend_bases import FigureManagerBase
-        from matplotlib.backends.backend_agg import FigureCanvasAgg
-
-        class BackendModuleLoader(Loader):
-            def create_module(self, spec):
-                return None
-            def exec_module(self, module):
-                from io import BytesIO
-                from base64 import encodebytes
-                from json import dumps as to_json
-                from pathlib import Path
-
-                class FigureCanvasEmacsComintMime(FigureCanvasAgg):
-                    manager_class = _api.classproperty(lambda cls: FigureManagerEmacsComintMime)
-
-                    def __init__(self, *args, **kwargs):
-                        super().__init__(*args, **kwargs)
-
-                class FigureManagerEmacsComintMime(FigureManagerBase):
-
-                    def __init__(self, canvas, num):
-                        super().__init__(canvas, num)
-
-                    def show(self):
-                        self.canvas.figure.draw_without_rendering()
-                        buf = BytesIO()
-                        self.canvas.print_png(buf)
-                        print_osc("image/png", encoding_workaround, buf.getvalue(), None)
-
-                module.FigureCanvas = FigureCanvasEmacsComintMime
-                module.FigureManager = FigureManagerEmacsComintMime
-
-        class BackendModuleFinder(MetaPathFinder):
-            def find_spec(self, fullname, path, target=None):
-                if fullname == 'emacscomintmime':
-                    return ModuleSpec(fullname, BackendModuleLoader())
-                else:
-                    return None
-
-        meta_path.append(BackendModuleFinder())
-        print("`comint-mime' enabled for Matplotlib")
+		mod = importlib.util.module_from_spec(importlib.machinery.ModuleSpec("__comint_mime", None))
+		mod.FigureCanvas = FC
+		mod.FigureManager = FM
+		sys.modules[mod.__name__] = mod
+		matplotlib.use("module://" + mod.__name__)
+		print("`comint-mime' enabled, using Matplotlib backend")
