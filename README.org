@@ -15,7 +15,7 @@ Python shell. However, it does more than that.
 First, it is not constrained to graphics, and can display other "MIME
 attachments" such as HTML and LaTeX content. In fact, the Python
 backend of the package implements IPython's [[https://ipython.readthedocs.io/en/stable/config/integrating.html#rich-display][rich display interface]]. A
-use-case beyond the displaying of graphics would be to render
+use-case beyond the displaying of graphics is to render
 dataframes as HTML tables; this opens up the possibility of
 typographical improvements over the usual pure-text
 representation. You can also easily define rich representations for
@@ -43,15 +43,19 @@ function to the appropriate mode hook:
   (add-hook 'inferior-python-mode-hook 'comint-mime-setup)
 #+end_src
 
-Note that for Python it is important to use the IPython
-interpreter. It can be configured to have the same look-and-feel as
-the classic =python= program as follows.
+For Python it is recommended to use the IPython interpreter.  It can
+be configured to have the same look-and-feel as the classic =python=
+program as follows.
 
 #+begin_src elisp
   (when (executable-find "ipython3")
     (setq python-shell-interpreter "ipython3"
           python-shell-interpreter-args "--simple-prompt --classic"))
 #+end_src
+
+If using the regular =python= interpreter, only Matplotlib figures are
+supported, and you need to call =plt.show()= and =plt.close()=
+manually to display and create new figures.
 
 ** Extending
 
@@ -84,9 +88,7 @@ using a temporary file for large data transfers.
 
 ** Todos
 
-- It should be possible to support at least Matplotlib in the standard
-  Python interpreter.
-- Improve the HTML rendering for numeric tables
+- Improve the HTML rendering of numeric tables
 
 ** Contributing
 
