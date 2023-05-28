@@ -19,7 +19,7 @@ Display contents of FILE as mime TYPE."
         fi
         base64 | xargs -0 printf '\033]5151;{"type":"%s"}\n%s\033\\\n' "$type"
     else
-        file=$(realpath -e "$1") || return 1
+        file=$(realpath "$1") || return 1
         [ -n "$type" ] || type=$(file -b --mime "$file")
         printf '\033]5151;{"type":"%s"}\nfile://%s%s\033\\\n' "$type" "$(uname -n)" "$file"
     fi
