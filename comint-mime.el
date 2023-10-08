@@ -77,9 +77,8 @@ The values should be functions, to called with a header alist
 and (undecoded) data as arguments and with point at the location
 where the content is to be inserted.")
 
-(defvar comint-mime-default-image-params nil
-  "Alist of default image parameters for display.
-
+(defvar comint-mime-image-props nil
+  "Property list of image parameters for display.
 See Info node `(elisp)Image Descriptors'.")
 
 (defvar comint-mime-setup-function-alist nil
@@ -142,13 +141,13 @@ from `comint-mode', or interactively after starting the comint."
 (defun comint-mime-render-svg (header data)
   "Render SVG from HEADER and DATA provided by `comint-mime-osc-handler'."
   (let ((start (point)))
-    (insert-image (apply #'svg-image data comint-mime-default-image-params))
+    (insert-image (apply #'svg-image data comint-mime-image-props))
     (put-text-property start (point) 'comint-mime header)))
 
 (defun comint-mime-render-image (header data)
   "Render image from HEADER and DATA provided by `comint-mime-osc-handler'."
   (let ((start (point)))
-    (insert-image (apply #'create-image data nil t comint-mime-default-image-params))
+    (insert-image (apply #'create-image data nil t comint-mime-image-props))
     (put-text-property start (point) 'comint-mime header)))
 
 ;;;; HTML
