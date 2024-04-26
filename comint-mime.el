@@ -81,11 +81,11 @@ where the content is to be inserted.")
   "Property list of image parameters for display.
 See Info node `(elisp)Image Descriptors'.")
 
-(defvar comint-mime-image-scalable nil
-  "Whether to prefer scalable images over raster images.
-Currently, this only has an effect in IPython, where it changes
-the generated Matplotlib figures from PNG to SVG format. This
-increases the figure quality at the cost of higher file sizes.")
+(defvar comint-mime-prefer-svg nil
+  "Whether to prefer SVG images over e.g. PNG images.
+This increases the figure quality at the cost of higher file
+sizes.  Currently, this only has an effect in IPython, where
+it changes the generated Matplotlib figures.")
 
 (defvar comint-mime-setup-function-alist nil
   "Alist of setup functions for comint-mime.
@@ -216,7 +216,7 @@ from `comint-mode', or interactively after starting the comint."
   (if (not python-shell--first-prompt-received)
       (add-hook 'python-shell-first-prompt-hook #'comint-mime-setup-python nil t)
     (python-shell-send-string-no-output
-     (format "%s\n__COMINT_MIME_setup('''%s''', scalable=%s)"
+     (format "%s\n__COMINT_MIME_setup('''%s''', prefer_svg=%s)"
              (with-temp-buffer
                (insert-file-contents
                 (expand-file-name "comint-mime.py"
@@ -225,7 +225,7 @@ from `comint-mode', or interactively after starting the comint."
              (if (listp comint-mime-enabled-types)
                  (string-join comint-mime-enabled-types ";")
                comint-mime-enabled-types)
-			 (if comint-mime-image-scalable "True" "False")))))
+             (if comint-mime-prefer-svg "True" "False")))))
 
 (push '(inferior-python-mode . comint-mime-setup-python)
       comint-mime-setup-function-alist)
