@@ -1,5 +1,5 @@
 # This file is part of https://github.com/astoff/comint-mime  -*- tab-width: 4; -*-
-def __COMINT_MIME_setup(types, size_limit=4000):
+def __COMINT_MIME_setup(types, size_limit=4000, prefer_svg=False):
 	import base64, functools, json, pathlib
 
 	def encoding_workaround(data):
@@ -22,6 +22,7 @@ def __COMINT_MIME_setup(types, size_limit=4000):
 		MIME_TYPES = {
 			"image/png": encoding_workaround,
 			"image/jpeg": encoding_workaround,
+			"image/svg+xml": str.encode,
 			"text/latex": str.encode,
 			"text/html": str.encode,
 			"application/json": lambda d: json.dumps(d).encode(),
@@ -29,6 +30,9 @@ def __COMINT_MIME_setup(types, size_limit=4000):
 		enabled = MIME_TYPES if types == "all" else types.split(";")
 		ipython.enable_matplotlib("inline")
 		ipython.display_formatter.active_types = list(MIME_TYPES.keys())
+		if prefer_svg:
+				ipython.run_line_magic("config", "InlineBackend.figure_formats = ['svg']")
+				import matplotlib; matplotlib.rcParams["figure.facecolor"] = (0, 0, 0, 0)
 		for mime, encoder in MIME_TYPES.items():
 			ipython.display_formatter.formatters[mime].enabled = mime in enabled
 			ipython.mime_renderers[mime] = functools.partial(print_osc, mime, encoder)
