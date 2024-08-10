@@ -240,9 +240,10 @@ from `comint-mode', or interactively after starting the comint."
       (add-hook 'comint-output-filter-functions 'comint-mime-setup-shell nil t)
     (remove-hook 'comint-output-filter-functions 'comint-mime-setup-shell t)
     (comint-redirect-send-command
-     (format " . %s\n" (shell-quote-argument
-                        (expand-file-name "comint-mime.sh"
-                                          comint-mime-setup-script-dir)))
+     (format " '.' %s\n"
+             (shell-quote-argument
+              (expand-file-name "comint-mime.sh"
+                                comint-mime-setup-script-dir)))
      nil nil t)))
 
 (push '(shell-mode . comint-mime-setup-shell)
