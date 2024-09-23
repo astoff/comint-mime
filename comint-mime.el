@@ -82,10 +82,15 @@ where the content is to be inserted.")
 See Info node `(elisp)Image Descriptors'.")
 
 (defvar comint-mime-prefer-svg nil
-  "Whether to prefer SVG images over e.g. PNG images.
-This increases the figure quality at the cost of higher file
-sizes.  Currently, this only has an effect in IPython, where
-it changes the generated Matplotlib figures.")
+  "Whether to prefer SVG images over raster images.
+This increases the figure quality at the cost of larger file sizes.
+Currently, this only has an effect in IPython, where it changes the
+generated Matplotlib figures.
+
+Using a theme with dark background can render some SVGs unreadable.
+If you experience this, try setting `comint-mime-image-props' to
+(:foreground \"black\" :background \"white\").  Alternatively, configure
+the SVG creator to produce images that play well with your theme.")
 
 (defvar comint-mime-setup-function-alist nil
   "Alist of setup functions for comint-mime.

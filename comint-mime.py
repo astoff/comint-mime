@@ -32,7 +32,6 @@ def __COMINT_MIME_setup(types, size_limit=4000, prefer_svg=False):
 		ipython.display_formatter.active_types = list(MIME_TYPES.keys())
 		if prefer_svg:
 				ipython.run_line_magic("config", "InlineBackend.figure_formats = ['svg']")
-				import matplotlib; matplotlib.rcParams["figure.facecolor"] = (0, 0, 0, 0)
 		for mime, encoder in MIME_TYPES.items():
 			ipython.display_formatter.formatters[mime].enabled = mime in enabled
 			ipython.mime_renderers[mime] = functools.partial(print_osc, mime, encoder)
