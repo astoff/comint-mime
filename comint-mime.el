@@ -60,12 +60,26 @@ interpretation is up to the backend.  The shell, for instance,
 only sends MIME content to Emacs via the mimecat command, so it
 ignores this option altogether.")
 
+(defvar comint-mime-latex-render-method nil
+  "Method used to render LaTeX fragments as an image.
+
+The following options are available:
+
+- nil (default): Just display the LaTeX source.
+
+- mathjax (recommended): Use the MathJax library.  For installation
+  instructions, see https://www.npmjs.com/package/mathjax-node.
+
+- org: Use Org mode's LaTeX rendering functions, which in turn depend on
+  a functioning TeX in installation.  If using this, make sure you
+  either trust the input TeX code or have TeX configured to handle
+  unsafe input, e.g. by disabling the shell escape feature.")
+
 (defvar comint-mime-renderer-alist
   '(("\\`image/svg+xml\\>" . comint-mime-render-svg)
     ("\\`image\\>" . comint-mime-render-image)
     ("\\`text/html\\>" . comint-mime-render-html)
-    ;; Disable this by default until we are sure about the security implications
-    ;; ("^text/latex" . comint-mime-render-latex)
+    ("\\`text/latex\\>" . comint-mime-render-latex)
     ("\\`text\\>" . comint-mime-render-plain-text)
     ("." . comint-mime-render-literally))
   "Alist associating MIME types to rendering functions.
@@ -187,13 +201,51 @@ from `comint-mode', or interactively after starting the comint."
 
 (defun comint-mime-render-latex (header data)
   "Render LaTeX from HEADER and DATA provided by `comint-mime-osc-handler'."
-  (let ((start (point)))
-    (insert data)
-    (decode-coding-region start (point) 'utf-8)
-    (put-text-property start (point) 'comint-mime header)
-    (save-excursion
-      (org-format-latex "org-ltximg" start (point) default-directory
-                        t nil t org-preview-latex-default-process))))
+  (pcase comint-mime-latex-render-method
+    ('mathjax
+     (let ((markers (cons (point-marker)
+                          (progn (insert data) (point-marker))))
+           (math (thread-last           ;FIXME: this is too naive
+                   data
+                   (string-remove-prefix "$")
+                   (string-remove-suffix "$"))))
+       (make-process
+        :name "mathjax"
+        :command `("node" "-e" "\
+require('mathjax-node').typeset(
+  JSON.parse(process.argv[1]),
+  data => {
+    if (data.errors || ! data.svg) process.exit(1)
+    process.stdout.write(data.svg)
+})"
+                   ,(json-serialize `(:math ,math :svg t)))
+        :buffer (generate-new-buffer " *comint-mime-mathjax-output*")
+        :stderr (get-buffer-create " *comint-mime-mathjax-errors*")
+        :sentinel (lambda (proc _reason)
+                    (unless (process-live-p proc)
+                      (when (zerop (process-exit-status proc))
+                        (let ((data (with-current-buffer (process-buffer proc)
+                                      (buffer-substring-no-properties
+                                       (point-min) (point-max)))))
+                          (with-current-buffer (marker-buffer (car markers))
+                            (add-text-properties
+                             (car markers) (cdr markers)
+                             `(display
+                               ,(apply #'svg-image data comint-mime-image-props)
+                               rear-nonsticky t
+                               keymap ,image-map
+                               context-menu-functions (image-context-menu))))))
+                      (kill-buffer (process-buffer proc))))
+          :connection-type 'pipe :noquery t)))
+    ('org
+     (let ((start (point)))
+       (insert data)
+       (decode-coding-region start (point) 'utf-8)
+       (put-text-property start (point) 'comint-mime header)
+       (save-excursion
+         (org-format-latex "org-ltximg" start (point) default-directory
+                           t nil t org-preview-latex-default-process))))
+    (_ (comint-mime-render-plain-text header data))))
 
 ;;;; Plain text
 (defun comint-mime-render-plain-text (header data)

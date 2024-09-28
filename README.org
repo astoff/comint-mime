@@ -57,6 +57,20 @@ If using the regular =python= interpreter, only Matplotlib figures are
 supported, and you need to call =plt.show()= and =plt.close()=
 manually to display and create new figures.
 
+** Customization
+
+The follow options are available:
+
+- =comint-mime-latex-render-method=: This variable determines how
+  LaTeX fragments are rendered.  The default is =nil=, which means
+  that the raw LaTeX source code is displayed.  The other
+  possibilities are:
+  - =mathjax=: Use the [[https://www.npmjs.com/package/mathjax-node][mathjax-node]] library, which you need to ensure
+    to be installed in such a way that Node will find it.
+  - =org=: Use Org mode's built-in rendering machinery.  Beware that,
+    depending on your system configuration, this may allow execution
+    of arbitrary code embedded in the LaTeX fragments.
+
 ** Extending
 
 To add support for new MIME types, see =comint-mime-renderer-alist=.
