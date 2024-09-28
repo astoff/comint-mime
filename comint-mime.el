@@ -61,12 +61,12 @@ only sends MIME content to Emacs via the mimecat command, so it
 ignores this option altogether.")
 
 (defvar comint-mime-renderer-alist
-  '(("^image/svg+xml\\>" . comint-mime-render-svg)
-    ("^image\\>" . comint-mime-render-image)
-    ("^text/html" . comint-mime-render-html)
+  '(("\\`image/svg+xml\\>" . comint-mime-render-svg)
+    ("\\`image\\>" . comint-mime-render-image)
+    ("\\`text/html\\>" . comint-mime-render-html)
     ;; Disable this by default until we are sure about the security implications
     ;; ("^text/latex" . comint-mime-render-latex)
-    ("^text\\>" . comint-mime-render-plain-text)
+    ("\\`text\\>" . comint-mime-render-plain-text)
     ("." . comint-mime-render-literally))
   "Alist associating MIME types to rendering functions.
 
