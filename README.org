@@ -57,6 +57,10 @@ If using the regular =python= interpreter, only Matplotlib figures are
 supported, and you need to call =plt.show()= and =plt.close()=
 manually to display and create new figures.
 
+*Advertisement:* For an even more featureful Python shell with
+improved completion, graphic capabilities and more, have a look at the
+[[http://elpa.gnu.org/packages/drepl.html][dREPL]] package.
+
 ** Customization
 
 The follow options are available:
