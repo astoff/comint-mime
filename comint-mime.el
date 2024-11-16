@@ -127,8 +127,8 @@ The keys should be major modes derived from `comint-mode'.  The
 values should be functions, called by `comint-mime-setup' to
 perform the mode-specific part of the setup.")
 
-(defvar comint-mime-setup-script-dir (if load-file-name
-                                         (file-name-directory load-file-name)
+(defvar comint-mime-setup-script-dir (if-let ((file (macroexp-file-name)))
+                                         (file-name-directory file)
                                        default-directory)
   "Directory to look for setup scripts.")
 
