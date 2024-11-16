@@ -5,7 +5,7 @@
 ;; Author: Augusto Stoffel <arstoffel@gmail.com>
 ;; Homepage: https://github.com/astoff/comint-mime
 ;; Keywords: processes, multimedia
-;; Package-Requires: ((emacs "28.1"))
+;; Package-Requires: ((emacs "28.1") (compat "29.1"))
 ;; Version: 0.6
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -49,6 +49,7 @@
 (require 'svg)
 (require 'text-property-search)
 (require 'url-parse)
+(require 'vtable nil t)                 ;New in Emacs 29
 (eval-when-compile (require 'subr-x))
 
 (defvar comint-mime-enabled-types 'all
@@ -59,6 +60,9 @@ Note that this merely expresses a preference and its
 interpretation is up to the backend.  The shell, for instance,
 only sends MIME content to Emacs via the mimecat command, so it
 ignores this option altogether.")
+
+(defvar comint-mime-use-vtable (featurep 'vtable)
+  "Whether to use `vtable' when displaying HTML tables.")
 
 (defvar comint-mime-latex-render-method nil
   "Method used to render LaTeX fragments as an image.
@@ -176,6 +180,39 @@ from `comint-mode', or interactively after starting the comint."
     (put-text-property start (point) 'comint-mime header)))
 
 ;;;; HTML
+(defun comint-mime--vtable-from-dom (dom)
+  "Insert a vtable created from a DOM element."
+  (let* ((trp (lambda (dom) (eq (dom-tag dom) 'tr)))
+         (tdp (lambda (dom) (memq (dom-tag dom) '(th td))))
+         (data (mapcar
+                (lambda (dom)
+                  (mapcar #'dom-texts (dom-search dom tdp)))
+                (dom-search dom trp))))
+    (make-vtable
+     :use-header-line nil
+     :columns (mapcar
+               (lambda (name)
+                 (list :name name
+                       :min-width (length name)
+                       :align 'right))
+               (car data))
+     :objects (or (cdr data) '(())))))
+
+(defun comint-mime--vtable-revert (&rest args)
+  "Preserve text properties when reverting a vtable created by `comint-mime'."
+  (let ((prop (get-text-property (point) 'comint-mime)))
+    (prog1 (apply args)
+      (when prop
+        (save-excursion
+          (with-restriction
+              (vtable-beginning-of-table)
+              (save-excursion (vtable-end-of-table))
+            (put-text-property (point-min) (point-max) 'comint-mime prop)
+            (while-let ((match (text-property-search-forward 'face)))
+              (put-text-property (prop-match-beginning match) (prop-match-end match)
+                                 'font-lock-face (prop-match-value match)))))))))
+(advice-add #'vtable-revert :around #'comint-mime--vtable-revert)
+
 (defun comint-mime-render-html (header data)
   "Render HTML from HEADER and DATA provided by `comint-mime-osc-handler'."
   (insert
@@ -185,13 +222,16 @@ from `comint-mode', or interactively after starting the comint."
      (with-temp-buffer
        (insert data)
        (decode-coding-region (point-min) (point-max) 'utf-8)
-       (shr-render-region (point-min) (point-max))
+       (let ((shr-external-rendering-functions
+              (append (when comint-mime-use-vtable
+                        '((table . comint-mime--vtable-from-dom)))
+                      shr-external-rendering-functions)))
+           (shr-render-region (point-min) (point-max)))
        ;; Don't let font-lock override those faces
        (goto-char (point-min))
-       (let (match)
-         (while (setq match (text-property-search-forward 'face))
-           (put-text-property (prop-match-beginning match) (prop-match-end match)
-                              'font-lock-face (prop-match-value match))))
+       (while-let ((match (text-property-search-forward 'face)))
+         (put-text-property (prop-match-beginning match) (prop-match-end match)
+                            'font-lock-face (prop-match-value match)))
        (put-text-property (point-min) (point-max) 'comint-mime header)
        (buffer-string)))))
 
