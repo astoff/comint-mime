@@ -6,7 +6,7 @@
 ;; Homepage: https://github.com/astoff/comint-mime
 ;; Keywords: processes, multimedia
 ;; Package-Requires: ((emacs "28.1") (compat "29.1") (mathjax "0.1"))
-;; Version: 0.6
+;; Version: 0.7
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -41,6 +41,12 @@
 ;;
 ;;     (add-hook 'shell-mode-hook 'comint-mime-setup)
 ;;     (add-hook 'inferior-python-mode-hook 'comint-mime-setup)
+
+;;; News:
+
+;; Version 0.7:
+;; - Use vtable to display HTML tables.
+;; - Use mathjax to display LaTeX fragments.
 
 ;;; Code:
 
