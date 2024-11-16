@@ -5,7 +5,7 @@
 ;; Author: Augusto Stoffel <arstoffel@gmail.com>
 ;; Homepage: https://github.com/astoff/comint-mime
 ;; Keywords: processes, multimedia
-;; Package-Requires: ((emacs "28.1") (compat "29.1"))
+;; Package-Requires: ((emacs "28.1") (compat "29.1") (mathjax "0.1"))
 ;; Version: 0.6
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -46,6 +46,8 @@
 
 (require 'comint)
 (require 'json)
+(require 'mathjax)
+(require 'shr)
 (require 'svg)
 (require 'text-property-search)
 (require 'url-parse)
@@ -64,6 +66,12 @@ ignores this option altogether.")
 (defvar comint-mime-use-vtable (featurep 'vtable)
   "Whether to use `vtable' when displaying HTML tables.")
 
+(defvar comint-mime-use-mathjax (mathjax-available-p)
+  "Whether to use MathJax to display mathematical formulas.
+
+Note that you need the Node JavaScript runtime installed on your machine
+for this to work.")
+
 (defvar comint-mime-latex-render-method nil
   "Method used to render LaTeX fragments as an image.
 
@@ -78,6 +86,9 @@ The following options are available:
   a functioning TeX in installation.  If using this, make sure you
   either trust the input TeX code or have TeX configured to handle
   unsafe input, e.g. by disabling the shell escape feature.")
+(make-obsolete-variable 'comint-mime-latex-render-method
+                        'comint-mime-use-mathjax
+                        "0.7")
 
 (defvar comint-mime-renderer-alist
   '(("\\`image/svg+xml\\>" . comint-mime-render-svg)
@@ -225,6 +236,8 @@ from `comint-mode', or interactively after starting the comint."
        (let ((shr-external-rendering-functions
               (append (when comint-mime-use-vtable
                         '((table . comint-mime--vtable-from-dom)))
+                      (when comint-mime-use-mathjax
+                        '((math . mathjax-shr-tag-math)))
                       shr-external-rendering-functions)))
            (shr-render-region (point-min) (point-max)))
        ;; Don't let font-lock override those faces
@@ -241,51 +254,13 @@ from `comint-mode', or interactively after starting the comint."
 
 (defun comint-mime-render-latex (header data)
   "Render LaTeX from HEADER and DATA provided by `comint-mime-osc-handler'."
-  (pcase comint-mime-latex-render-method
-    ('mathjax
-     (let ((markers (cons (point-marker)
-                          (progn (insert data) (point-marker))))
-           (math (thread-last           ;FIXME: this is too naive
-                   data
-                   (string-remove-prefix "$")
-                   (string-remove-suffix "$"))))
-       (make-process
-        :name "mathjax"
-        :command `("node" "-e" "\
-require('mathjax-node').typeset(
-  JSON.parse(process.argv[1]),
-  data => {
-    if (data.errors || ! data.svg) process.exit(1)
-    process.stdout.write(data.svg)
-})"
-                   ,(json-serialize `(:math ,math :svg t)))
-        :buffer (generate-new-buffer " *comint-mime-mathjax-output*")
-        :stderr (get-buffer-create " *comint-mime-mathjax-errors*")
-        :sentinel (lambda (proc _reason)
-                    (unless (process-live-p proc)
-                      (when (zerop (process-exit-status proc))
-                        (let ((data (with-current-buffer (process-buffer proc)
-                                      (buffer-substring-no-properties
-                                       (point-min) (point-max)))))
-                          (with-current-buffer (marker-buffer (car markers))
-                            (add-text-properties
-                             (car markers) (cdr markers)
-                             `(display
-                               ,(apply #'svg-image data comint-mime-image-props)
-                               rear-nonsticky t
-                               keymap ,image-map
-                               context-menu-functions (image-context-menu))))))
-                      (kill-buffer (process-buffer proc))))
-          :connection-type 'pipe :noquery t)))
-    ('org
-     (let ((start (point)))
-       (insert data)
-       (decode-coding-region start (point) 'utf-8)
-       (put-text-property start (point) 'comint-mime header)
-       (save-excursion
-         (org-format-latex "org-ltximg" start (point) default-directory
-                           t nil t org-preview-latex-default-process))))
-    (_ (comint-mime-render-plain-text header data))))
+  (if (not (or comint-mime-use-mathjax
+               (eq 'mathjax comint-mime-latex-render-method)))
+      (comint-mime-render-plain-text header data)
+    (let ((start (point)))
+      (insert data)
+      (mathjax-typeset-region start (point))
+      (put-text-property start (point) 'comint-mime header))))
 
 ;;;; Plain text
 (defun comint-mime-render-plain-text (header data)

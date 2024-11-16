@@ -63,15 +63,10 @@ improved completion, graphic capabilities and more, have a look at the
 
 The following options are available:
 
-- =comint-mime-latex-render-method=: This variable determines how
-  LaTeX fragments are rendered.  The default is =nil=, which means
-  that the raw LaTeX source code is displayed.  The other
-  possibilities are:
-  - =mathjax=: Use the [[https://www.npmjs.com/package/mathjax-node][mathjax-node]] library, which you need to ensure
-    to be installed in such a way that Node will find it.
-  - =org=: Use Org mode's built-in rendering machinery.  Beware that,
-    depending on your system configuration, this may allow execution
-    of arbitrary code embedded in the LaTeX fragments.
+- =comint-mime-use-mathjax=: Whether to use the [[https://elpa.gnu.org/packages/mathjax.html][mathjax]] package to
+  render LaTeX fragments.  It is true by default, as long as you have
+  the necessary external prerequisites installed (namely, the Node
+  JavaScript runtime.)
 
 - =comint-mime-use-vtable=: Whether to use the [[https://www.gnu.org/software/emacs/manual/html_mono/vtable.html][vtable]] package when
   displaying HTML tables.  This improves alignment and makes the
